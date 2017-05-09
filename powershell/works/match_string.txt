@@ -1,0 +1,10 @@
+if($content -match "(.{0,30}$pattern.{0,30})")
+
+## Check if the line is of the special format: numbers, followed by
+## a colon, followed by extra text.
+if($line -match "^(\d+?):.*")
+{
+## If it did match the format, then $matches[1] represents the
+## number -- a counter into the list of objects we saved during
+## the "process" section.
+## So, we output that object from our list of saved

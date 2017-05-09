@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Factory="MS.IT.POEDS.Host.Service.Async.AsyncServiceFactory" Service="MS.IT.POEDS.Adapter.Service.Async.RetryFileLoadService,POEDSRetryFileLoadAdapter" %>

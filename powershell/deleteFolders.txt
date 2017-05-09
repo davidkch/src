@@ -1,0 +1,3 @@
+set MT=”%TEMP%\DelFolder_%RANDOM%”
+MD %MT%
+ RoboCopy %MT% %folder% /MIR

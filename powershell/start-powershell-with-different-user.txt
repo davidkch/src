@@ -1,0 +1,5 @@
+Start-Process  “c:\windows\system32\WindowsPowerShell\v1.0\PowerShell_ISE.exe” -Credential “redmond\bgcoebld”
+
+or
+
+Start-Process  “c:\windows\system32\WindowsPowerShell\v1.0\PowerShell.exe” -Credential “redmond\bgcoebld”
