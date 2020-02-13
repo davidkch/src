@@ -1,0 +1,5 @@
+robocopy $env:windir\ c:\logfiles\ *.log /R:0 /LEV:3 /S /XD *winsxs*  | 
+Where-Object { $_} | 
+Foreach-Object { Write-Progress "Robocopy is looking for LOG-files in:" $_.Split([char]9)[-1] }$files = dir c:\logfiles *.log -Recurse$files | 
+Move-Item -Destination c:\logfiles\ -Forcedir c:\logfiles | 
+Where-Object { $_.psiscontainer } | del -Recurse -Force

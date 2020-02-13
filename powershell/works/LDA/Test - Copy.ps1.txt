@@ -1,0 +1,62 @@
+﻿$LogFile = "Test.log"
+
+#$dcom = Get-WMIObject -Class Win32_DCOMApplicationSetting -Filter 'Description="Something"'
+#$security = Get-WmiObject -ComputerName $env:COMPUTERNAME -Namespace root/cimv2 -Class __SystemSecurity
+#$security = Get-WmiObject -Namespace root/cimv2 -Class Win32_DCOMApplicationSetting
+
+#$security = Get-WmiObject -Namespace root/cimv2 -Class Win32_COMSetting -Filter 'Caption="DCOMAccessControl"'
+#$security = Get-WmiObject -Namespace root/cimv2 -Class Win32_COMSetting
+
+#$security = Get-WmiObject -Namespace root/cimv2 -Class Win32_COMClass
+
+#$security = Get-WmiObject -Namespace root/cimv2 -Class Win32_DCOMApplicationAccessAllowedSetting
+#$security = Get-WmiObject -Namespace root/cimv2 -Class Win32_DCOMApplicationLaunchAllowedSetting 
+
+
+Function Call
+{
+
+ $Reg = [WMIClass]"\\$Env:ComputerName\root\default:StdRegProv"
+ $DCOMMachineLaunchRestriction = $Reg.GetBinaryValue(2147483650,"software\microsoft\ole","MachineLaunchRestriction").uValue
+
+ write-host "`tConverting current permissions to SDDL format..."
+ $converter = new-object system.management.ManagementClass Win32_SecurityDescriptorHelper
+ $CurrentDCOMSDDLMachineLaunchRestriction = $converter.BinarySDToSDDL($DCOMMachineLaunchRestriction)
+
+ Write-host "DCOM: " $CurrentDCOMSDDLMachineLaunchRestriction.SDDL
+
+<#
+ foreach($s in $security)
+ { Write-Host "Object: " $s }
+ #>
+}
+
+
+
+function get-sid
+{
+Param (
+ $DSIdentity
+ )
+ $ID = new-object System.Security.Principal.NTAccount($DSIdentity)
+ return $ID.Translate( [System.Security.Principal.SecurityIdentifier] ).toString()
+}
+
+
+function get-NTaccount
+{
+Param (
+ $SID
+ )
+ $id = New-Object System.Security.Principal.SecurityIdentifier($sid)
+ $account = $id.Translate( [System.Security.Principal.NTAccount] )
+ return $account
+ }
+
+ <#
+$SID = get-sid -DSIdentity "NETWORK SERVICE"
+write-host "SID: $SID"
+get-NTaccount ($SID)
+#>
+
+Call

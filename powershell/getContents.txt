@@ -1,0 +1,10 @@
+
+I think the key here is;   I need to move the files,  I exported to a CSV file,  and move them to a different location,  while maintaining the original directory tree.
+
+$files=get-content 'files.csv'
+$files | ForEach{
+    $newpath=$_ -replace 'e:\\folder1\\common\\','e:\export\folder1\common\'
+    $testfolder=Split-Path $newpath -Parent
+    If(-not(Test-Path $testfolder)){md $testfolder}
+    copy-item $_ $newpath
+}

@@ -1,0 +1,2 @@
+if (!(Test-Path -path $destDir)) { New-Item $destDir -itemtype directory -force }
+

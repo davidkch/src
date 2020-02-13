@@ -1,0 +1,51 @@
+# PowerShell Robocopy script with e-mail notification
+# Created by Michel Stevelmans - http://www.michelstevelmans.com
+
+# Change these values
+$SourceFolder = "C:\SourceFolder"
+$DestinationFolder = "C:\DestinationFolder"
+$Logfile = "C:\Robocopy.log"
+$EmailFrom = "michel.stevelmans@domain.com"
+$EmailTo = "michel.stevelmans@domain.com"
+$EmailBody = "Robocopy completed successfully. See attached log file for details"
+$EmailSubject = "Robocopy Summary"
+$SMTPServer = "smtp.domain.com"
+$SMTPPort = "25"
+
+# Copy Folder with Robocopy
+Robocopy $SourceFolder $DestinationFolder /E /ZB /R:1 /W:1 /PURGE /LOG:$Logfile /NP
+
+# Send E-mail message with log file attachment
+$Message = New-Object Net.Mail.MailMessage($EmailFrom, $EmailTo, $EmailSubject, $EmailBody)
+$Attachment = New-Object Net.Mail.Attachment($Logfile, 'text/plain')
+$Message.Attachments.Add($Attachment)
+$SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, $SMTPPort)
+$SMTPClient.Send($Message)
+
+If you want to use gmail, you have to use a different approach because gmail requires authentication, a different port and SSL.
+ The script below will allow you to let PowerShell use gmail to send the e-mail notification.
+# PowerShell Robocopy script with e-mail notification
+# Created by Michel Stevelmans - http://www.michelstevelmans.com
+
+# Change these values
+$SourceFolder = "C:\SourceFolder"
+$DestinationFolder = "C:\DestinationFolder"
+$Logfile = "C:\Robocopy.log"
+$EmailFrom = "michel.stevelmans@domain.com"
+$EmailTo = "michel.stevelmans@domain.com"
+$EmailBody = "Robocopy completed successfully. See attached log file for details"
+$EmailSubject = "Robocopy Summary"
+$Username = "Your.GmailUsername"
+$Password = "YourGmailPassword"
+
+# Copy Folder with Robocopy
+Robocopy $SourceFolder $DestinationFolder /E /ZB /R:1 /W:1 /PURGE /LOG:$Logfile /NP
+
+# Send E-mail message with log file attachment
+$Message = New-Object Net.Mail.MailMessage($EmailFrom, $EmailTo, $EmailSubject, $EmailBody)
+$Attachment = New-Object Net.Mail.Attachment($Logfile, 'text/plain')
+$Message.Attachments.Add($Attachment)
+$SMTPClient = New-Object Net.Mail.SmtpClient("smtp.gmail.com", 587)
+$SMTPClient.EnableSsl = $true
+$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($Username, $Password);
+$SMTPClient.Send($Message)

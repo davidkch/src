@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Schema for the Callback Message for the Slk Callback to automated systems
+	Created Date:05/22/09
+	Created By:ALFREDAL
+  Modified Date:03/17/2012 - FileHash with size 192 and Outbound_4
+	Definition of used types:
+	token:A string that does not contain line feeds, carriage returns, tabs, leading or trailing spaces, or multiple spaces
+	anyURI: The anyURI data type is used to specify a URI This include UNC paths.
+	positiveInteger:An integer containing only positive values (1,2,..)
+	string:A string composed of unicode caracters.
+	Example :
+	<CallbackMessage xmlns="https://SLK.GTM.MICROSOFT.COM/SLKJIT_Outbound_4">
+	<Message>
+		<SourceId>12</SourceId>
+		<ServiceRequestId>18</ServiceRequestId>
+		<StatusCode>COMPLETE</StatusCode>
+		<FileName>\\a\test\pid23.exe</FileName>
+		<FileHash>AF345ED</FileHash>
+		<Comments></Comments>
+	</Message>
+	<Signature>AF3423455445465</Signature>
+</CallbackMessage>
+-->
+<xs:schema
+    attributeFormDefault="unqualified" 
+    elementFormDefault="qualified" 
+    targetNamespace="https://SLK.GTM.MICROSOFT.COM/SLKJIT_Outbound_4" 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  
+		<xs:element name="CallbackMessage" nillable="false">
+			<xs:complexType>
+        <!-- indicates that the "Message" and the "Signature" elements can appear in any order but both elements MUST occur once and only once-->
+				<xs:all>
+					<xs:element name="Message">
+						<xs:complexType>
+							<xs:all>
+                <!-- indicates that the all elements can appear in any order but all elements MUST occur once and only once-->
+								<xs:element name="ServiceRequestId" nillable="false" maxOccurs="1" minOccurs="1" type="xs:long">
+                  <!--Mandatory Field: ServiceRequestId from SLK System. This is a identifier returned to tenant system upon acceptance of the request during submission phase. Refer to signature of CreateRequest Method in submission interface.-->
+                </xs:element>
+								<xs:element name="SourceId" nillable="false"  maxOccurs="1" minOccurs="1">
+                  <!--Mandatory Field: globally unique identifier per request provided by Tenant system during the submission phase. -->
+                  <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                      <xs:minLength value="1"/>
+                      <xs:maxLength value="50"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:element>
+								<xs:element name="StatusCode" nillable="false"  maxOccurs="1" minOccurs="1">
+                  <!--Mandatory Field: Status Code value for the request. 
+                      COMPLETED = Request completed successfully, 
+                      FAILED = Request failed in SLK System, 
+                      REJECTED = Request rejected by SLK System.
+                  -->
+									<xs:simpleType>
+										<xs:restriction id="StatusCode" base="xs:token">
+											<xs:enumeration value="COMPLETED"/>
+											<xs:enumeration value="FAILED"/>
+											<xs:enumeration value="REJECTED"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="FileHash" nillable="true" maxOccurs="1" minOccurs="0">
+                  <!--When Success Code is COMPLETED, this will be the hexadecimal value of File hash of the file on delivery share, in which the encrypted product keys are in. otherwise it will be empty-->
+                  <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                      <xs:minLength value="0"/>
+                      <xs:maxLength value="192"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:element>
+								<xs:element name="FileName" nillable="true" maxOccurs="1" minOccurs="0">
+                  <!--When Success Code is COMPLETED, this will be the name of the file on delivery share with Full UNC path, in which the encrypted product keys are in. Otherwise it will be empty-->
+                  <xs:simpleType>
+                    <xs:restriction base="xs:token">
+                      <xs:minLength value="0"/>
+                      <xs:maxLength value="255"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:element>
+								<xs:element name="Comments" nillable="true" maxOccurs="1" minOccurs="0">
+                  <!--Optional: Comments parameters will contain explanatory text specific to a rejection of, or failure of, the given key file request, else it will be empty. -->
+                  <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                      <xs:minLength value="0"/>
+                      <xs:maxLength value="1000"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:element>
+							</xs:all>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="Signature" nillable="false" maxOccurs="1">
+            <!-- convert pkcs7 datablob of Message element into BASE64 encoded string to get text of Signature element-->
+            <!-- Use .Net Framework SignedCms class to calculate the signature (SignedCms.ComputeSignature)-->
+            <xs:simpleType>
+              <xs:restriction base="xs:token">
+                <xs:minLength value="1"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+				</xs:all>
+			</xs:complexType>
+		</xs:element>
+</xs:schema>
+
+

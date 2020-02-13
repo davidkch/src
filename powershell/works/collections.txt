@@ -1,0 +1,29 @@
+public void Add(YourIdType key,TzThing thing )
+{
+   if(dictionary.ContainsKey(key))
+   {
+      dictionary[key].Add(thing);
+   }
+   else
+   {
+      dictionary.Add(key,new List<TzThing> {thing});
+   }
+}
+
+
+$list = New-Object 'system.collections.generic.list[string]'
+$dict = New-Object 'system.collections.generic.dictionary[[string],[system.collections.generic.list[string]]]'
+
+ $foo = New-Object "System.Collections.Generic.Dictionary``2[System.String,System.String]"
+$foo.Add("FOO", "BAR")
+$foo
+
+
+16# $bar = New-Object "System.Collections.Generic.SortedDictionary``2[System.String,System.String]"
+New-Object : Cannot find type [System.Collections.Generic.SortedDictionary`2[System.String,System.String]]: make sure the assembly containing this type is loaded.
+At line:1 char:18
++ $bar = New-Object <<<< "System.Collections.Generic.SortedDictionary``2[System.String,System.String]"
+
+$bar = new-object "System.Collections.Generic.Dictionary``2[[System.String, mscorlib, V
+Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscor
+mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"

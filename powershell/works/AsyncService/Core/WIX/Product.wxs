@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2009 Microsoft Corporation.  All rights reserved.
+
+    POEDSSyncService.msi: installer Service
+    Author:   Venki <v-venkgo@microsoft.com>/BGBUILD TEAM
+    Date:     March 11, 2009
+
+    This MSI takes the following properties:
+
+    Property        required    default           Description
+    =============   =========   ===============   =============================
+    TARGETDIR          YES			             The target directory can be changable at runtime
+                                                  in octopus "property" tab.
+    
+-->
+<?define BINARIESDIR = "Source"?>
+<?define REGKEY_ROOT ="SYSTEM\CurrentControlSet\Services\Eventlog"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:iis="http://schemas.microsoft.com/wix/IIsExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension" >
+
+  <Product Id="0722059F-3C9A-466e-845F-4CDD02037840"
+			   Name="AsyncService"
+			   Language="1033"
+			   Version="1.0.0.0"
+			   Manufacturer="Microsoft"
+			   UpgradeCode="B4C4EBC0-034E-47ce-9355-2235F8543D05">
+
+    <Package InstallerVersion="200" Compressed="yes" />
+
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+
+    <!--GLOBAL PROPERTIES-->
+    <Property Id="TARGETDIR" Value="[TARGETDIR]" />
+    <Property Id="INSTALLDIR" Value="[INSTALLDIR]" />
+    <Property Id="WEBSITE" Value="[WEBSITE]" />
+    <Property Id="VDIR" Value="[VDIR]" />
+    <Property Id="IP" Value="[IP]" />
+    <Property Id="HTTPPORT" Value="[HTTPPORT]" />
+    <Property Id="APPPOOL" Value="[APPPOOL]" />
+    <Property Id="LOGFOLDER" Value="[LOGFOLDER]" />
+    <Property Id="TCPPORT" Value="[TCPPORT]" />
+    <Property Id="WEBLOGS" Value="[WEBLOGS]" />
+    <Property Id="LOCALGROUPPOEDS" Value="[LOCALGROUPPOEDS]" />
+    <Property Id="LOCALGROUPSLK" Value="[LOCALGROUPSLK]" />
+    <Property Id="LOCALGROUPPOELOAD" Value="[LOCALGROUPPOELOAD]" />
+    <Property Id="LOCALGROUPPOEPPOS" Value="[LOCALGROUPPOEPPOS]" />
+    <Property Id="LOCALGROUPIBB" Value="[LOCALGROUPIBB]" />
+    <Property Id="LOCALGROUPPING" Value="[LOCALGROUPPING]" />
+    <!--<Property Id="USERSPING" Value="[USERSPING]" />
+		<Property Id="USERSPOEDS" Value="[USERSPOEDS]" />
+		<Property Id="USERSIBB" Value="[USERSIBB]" />
+		<Property Id="USERSSLK" Value="[USERSSLK]" />
+		<Property Id="USERSPOELOAD" Value="[USERSPOELOAD]" />
+		<Property Id="USERSPOEPPOS" Value="[USERSPOEPPOS]" />-->
+    <Property Id="FQDN" Value="[FQDN]" />
+
+    <!--CONFIG FILES-->
+    <Property Id="CONFIGDBSERVERNAME" Value="[CONFIGDBSERVERNAME]" />
+    <Property Id="ALTCONFIGDBSERVERNAME" Value="[ALTCONFIGDBSERVERNAME]" />
+    <Property Id="ELLOGDBSERVERNAME" Value="[ELLOGDBSERVERNAME]" />
+    <Property Id="ALTELLOGDBSERVERNAME" Value="[ALTELLOGDBSERVERNAME]" />
+    <!--<Property Id="PERSISTENCEDBSERVERNAME" Value="[PERSISTENCEDBSERVERNAME]" />
+		<Property Id="ALTPERSISTENCEDBSERVERNAME" Value="[ALTPERSISTENCEDBSERVERNAME]" />
+		<Property Id="TRACKINGDBSERVERNAME" Value="[TRACKINGDBSERVERNAME]" />
+		<Property Id="ALTTRACKINGDBSERVERNAME" Value="[ALTTRACKINGDBSERVERNAME]" />-->
+    <Property Id="DATADIR" Value="[DATADIR]" />
+    <Property Id="ERRORDIR" Value="[ERRORDIR]" />
+    <Property Id="XSLTDIR" Value="[XSLTDIR]" />
+    <Property Id="XSDDIR" Value="[XSDDIR]" />
+    <!--<Property Id="MSMQNAME" Value="[MSMQNAME]" />-->
+    <Property Id="SIGNCERTPATH" Value="[SIGNCERTPATH]" />
+    <Property Id="SIGNCERTPASS" Value="[SIGNCERTPASS]" />
+    <Property Id="SIGNCERTPATHSLK" Value="[SIGNCERTPATHSLK]" />
+    <!--<Property Id="SIGNCERTIFICATESEARCHKEY" Value="[SIGNCERTIFICATESEARCHKEY]" />-->
+    <!--<Property Id="DOMAINNAME" Value="[DOMAINNAME]" />
+    <Property Id="DOMAINACCOUNTNAME" Value="[DOMAINACCOUNTNAME]" />
+    <Property Id="DOMAINACCOUNTPASSWORD" Hidden="yes" Secure="yes" Value="[DOMAINACCOUNTPASSWORD]" />-->
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="PLATFORM" Value="PA" />
+    <Property Id="DEPLOYMENTMODE" Value="DEPLOYMENTMODE" />
+
+    <iis:WebDirProperties Id="ReadOnly" Read="yes" Write="no" Script="yes" Execute="no" AnonymousAccess="no" CacheControlMaxAge="4294967295" />
+    <iis:WebDirProperties Id="ReadAndExecute" Read="yes" Write="no" Script="yes" Execute="yes" AnonymousAccess="no" />
+    <iis:WebDirProperties Id="AccessAll" AnonymousAccess="no" WindowsAuthentication="yes" Index="yes"  LogVisits="yes" Read="yes" Write="no" Script="yes" Execute="no" DefaultDocuments="default.aspx,default.asp,default.htm,index.htm,iisstart.htm" AccessSSL="no"/>
+    <iis:WebLog Id="POEDSLog" Type="none" />
+    <Property Id="FRAMEWORK" >
+      <RegistrySearch Id="FrameWorkRegistry"
+							Root="HKLM"
+							Key="SOFTWARE\Microsoft\.NETFramework"
+							Type="raw" Name="InstallRoot" />
+    </Property>
+    <Condition Message="You must have the 64bit .Net FrameWork component installed on this machine to use this product. Installation aborted!!!"><![CDATA[FRAMEWORK]]></Condition>
+    <Property Id="OPERATINGSYSTEM" >
+      <RegistrySearch Id="OSRegistry"
+							Root="HKLM"
+							Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+							Type="raw" Name="ProductName" />
+    </Property>
+    <Condition Message="You must have the Windows Server 2008 R2 installed on this machine to use this product. Installation aborted!!!"><![CDATA[OPERATINGSYSTEM]]></Condition>
+
+
+    <util:Group Id="IISWPGGroup" Name="IIS_IUSRS" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!--<Component Id="UserGroup" Guid="{B6F70CE1-8C64-4ddd-905A-7276273DCBEA}">
+        -->
+      <!--Domain Account credentials-->
+      <!--
+        <util:User Id="WebDomainUser" Domain="[DOMAINNAME]" Name='[DOMAINACCOUNTNAME]' Password='[DOMAINACCOUNTPASSWORD]' UpdateIfExists='yes' CreateUser='no'>
+          -->
+      <!--<util:GroupRef Id='IISWPGGroup'></util:GroupRef>-->
+      <!--
+        </util:User>
+      </Component>-->
+      <Directory Id="INSTALLDIR" Name="INSTALLDIR">
+        <Component Id="InstallFolder" Guid="300611C2-6685-4f08-B3CE-5F1F2DE8E65B" >
+          <CreateFolder Directory="INSTALLDIR">
+            <Permission User="IIS_IUSRS" GenericRead="yes" GenericExecute="yes" GenericWrite="no" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+        </Component>
+        <Component Id="AsyncServiceEventLog" Guid="7E51638E-ADC4-46e4-ABA0-A599959D576A" Permanent="yes">
+          <RegistryKey Root="HKLM"
+										   Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSAsyncServicePing"
+										   Action="create" />
+          <RegistryValue Root="HKLM"
+											 Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSAsyncServicePing"
+											 Action="write"
+											 Name="EventMessageFile"
+											 Type="expandable"
+											 Value="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll" />
+
+          <RegistryKey Root="HKLM"
+										   Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSAsyncService"
+										   Action="create" />
+          <RegistryValue Root="HKLM"
+											 Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSAsyncService"
+											 Action="write"
+											 Name="EventMessageFile"
+											 Type="expandable"
+											 Value="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll" />
+
+          <RegistryKey Root="HKLM"
+										   Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSProductKeyRequestService"
+										   Action="create" />
+          <RegistryValue Root="HKLM"
+											 Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSProductKeyRequestService"
+											 Action="write"
+											 Name="EventMessageFile"
+											 Type="expandable"
+											 Value="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll" />
+
+          <RegistryKey Root="HKLM"
+										   Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSProductKeyRollbackService"
+										   Action="create" />
+          <RegistryValue Root="HKLM"
+											 Key="$(var.REGKEY_ROOT)\POEDSLog\POEDSProductKeyRollbackService"
+											 Action="write"
+											 Name="EventMessageFile"
+											 Type="expandable"
+											 Value="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll" />
+        </Component>
+        <!--DEPLOYMENT MODES FILES -->
+        <Component Id="LegacyMode" Guid="{389029CD-683B-448E-96B3-7A48EA205EA6}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "LEGACY" ]]></Condition>
+          <File Id="AsyncPingAdapter" Name="AsyncPingAdapter.svc" Source="$(var.BINARIESDIR)\AsyncPingAdapter.svc" />
+          <File Id="ProcessPendingOrdersService.svc" Name="ProcessPendingOrdersService.svc" Source="$(var.BINARIESDIR)\ProcessPendingOrdersService.svc" />
+          <File Id="RetryFileLoadService.svc" Name="RetryFileLoadService.svc" Source="$(var.BINARIESDIR)\RetryFileLoadService.svc" />
+          <File Id="SlkCallbackService.svc" Name="SlkCallbackService.svc" Source="$(var.BINARIESDIR)\SlkCallbackService.svc" />
+          <File Id="DownstreamMessageAdapter" Name="DownstreamMessageAdapter.svc" Source="$(var.BINARIESDIR)\AsyncWorkflowAdapter.svc" />
+          <File Id="SalesOrderWorkflowAdapter" Name="SalesOrderWorkflowAdapter.svc" Source="$(var.BINARIESDIR)\SalesOrderWorkflowAdapter.svc" />
+        </Component>
+        <Component Id="FEMode" Guid="{68820EB8-4977-4373-BECE-5E519B16ADE7}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "FE"]]></Condition>
+          <File Id="AsyncPingAdapter1" Name="AsyncPingAdapter.svc" Source="$(var.BINARIESDIR)\AsyncPingAdapter.svc" />
+          <File Id="DownstreamMessageAdapter1" Name="DownstreamMessageAdapter.svc" Source="$(var.BINARIESDIR)\AsyncWorkflowAdapter.svc" />
+        </Component>
+        <Component Id="MTMode" Guid="{316EE0EC-F446-4286-8F09-6973838E1999}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "MT"]]></Condition>
+          <File Id="AsyncPingAdapter2" Name="AsyncPingAdapter.svc" Source="$(var.BINARIESDIR)\AsyncPingAdapter.svc" />
+          <File Id="ProcessPendingOrdersService.svc2" Name="ProcessPendingOrdersService.svc" Source="$(var.BINARIESDIR)\ProcessPendingOrdersService.svc" />
+          <File Id="RetryFileLoadService.svc2" Name="RetryFileLoadService.svc" Source="$(var.BINARIESDIR)\RetryFileLoadService.svc" />
+          <File Id="SlkCallbackService.svc2" Name="SlkCallbackService.svc" Source="$(var.BINARIESDIR)\SlkCallbackService.svc" />
+          <File Id="DownstreamMessageAdapter2" Name="DownstreamMessageAdapter.svc" Source="$(var.BINARIESDIR)\AsyncWorkflowAdapter.svc" />
+          <File Id="SalesOrderWorkflowAdapter2" Name="SalesOrderWorkflowAdapter.svc" Source="$(var.BINARIESDIR)\SalesOrderWorkflowAdapter.svc" />
+        </Component>
+        <Component Id="IMMode" Guid="{B7D9BC4F-7256-49B0-857A-AC0D5F273C15}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "IM"]]></Condition>
+          <File Id="AsyncPingAdapter3" Name="AsyncPingAdapter.svc" Source="$(var.BINARIESDIR)\AsyncPingAdapter.svc" />
+          <File Id="ProcessPendingOrdersService.svc3" Name="ProcessPendingOrdersService.svc" Source="$(var.BINARIESDIR)\ProcessPendingOrdersService.svc" />
+          <File Id="RetryFileLoadService.svc3" Name="RetryFileLoadService.svc" Source="$(var.BINARIESDIR)\RetryFileLoadService.svc" />
+          <File Id="SlkCallbackService.svc3" Name="SlkCallbackService.svc" Source="$(var.BINARIESDIR)\SlkCallbackService.svc" />
+        </Component>
+        <Component Id="LegcayConfig" Guid="{D109D78A-F75E-4502-B0A0-D5DA6260E6FD}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "LEGACY" ]]></Condition>
+          <File Id="WebL.config" Name="Web.Async.ship.config" Source="$(var.BINARIESDIR)\Web.Async.ship.config" />
+        </Component>
+        <Component Id="FEConfig" Guid="{DE280FD8-D186-4AE3-900B-40BFAF704ADF}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "FE"]]></Condition>
+          <File Id="WebF.config" Name="Web.Async.ship.config" Source="$(var.BINARIESDIR)\Web.Async.FE.ship.config" />
+        </Component>
+        <Component Id="MTConfig" Guid="{14F42AC9-5B62-414A-9DFB-BC0E8D0DEDB1}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "MT"]]></Condition>
+          <File Id="WebM.config" Name="Web.Async.ship.config" Source="$(var.BINARIESDIR)\Web.Async.MT.ship.config" />
+        </Component>
+        <Component Id="IMConfig" Guid="{57E7EF72-756D-4CAF-B028-6ABE1CCD1F6A}" >
+          <Condition><![CDATA[DEPLOYMENTMODE = "IM"]]></Condition>
+          <File Id="WebI.config" Name="Web.Async.ship.config" Source="$(var.BINARIESDIR)\Web.Async.IM.MT.ship.config" />
+        </Component>
+
+        <Component Id="BuildInfo" Guid="{F9789927-D3CC-462F-8887-E1139DE12C07}" >
+          <File Id="BuildInfo.xml" Name="BuildInfo.xml" Source="$(var.BINARIESDIR)\BuildInfo.xml" />
+        </Component>
+        
+        <Component Id="RootFiles" Guid="C42D4F0A-BD5E-46d8-AB04-7988B89C790E" >
+          <!--<File Id="AsyncPingAdapter" Name="AsyncPingAdapter.svc" Source="$(var.BINARIESDIR)\AsyncPingAdapter.svc" />
+					<File Id="DownstreamMessageAdapter" Name="DownstreamMessageAdapter.svc" Source="$(var.BINARIESDIR)\AsyncWorkflowAdapter.svc" />
+					<File Id="PingAdapter.svc" Name="PingAdapter.svc" Source="$(var.BINARIESDIR)\PingAdapter.svc" />-->
+          <!--<File Id="ProcessPendingOrdersService.svc" Name="ProcessPendingOrdersService.svc" Source="$(var.BINARIESDIR)\ProcessPendingOrdersService.svc" />
+					<File Id="RetryFileLoadService.svc" Name="RetryFileLoadService.svc" Source="$(var.BINARIESDIR)\RetryFileLoadService.svc" />
+					<File Id="SlkCallbackService.svc" Name="SlkCallbackService.svc" Source="$(var.BINARIESDIR)\SlkCallbackService.svc" />
+					<File Id="SalesOrderWorkflowAdapter" Name="SalesOrderWorkflowAdapter.svc" Source="$(var.BINARIESDIR)\SalesOrderWorkflowAdapter.svc" />-->
+          <File Id="ErrorResource.resources" Name="ErrorResource.resources" Source="$(var.BINARIESDIR)\ErrorResource.resources" />
+          <File Id="AsynService.Diagnostics.Configuration" Name="AsynService.Diagnostics.Configuration.ship.config" Source="$(var.BINARIESDIR)\AsynService.Diagnostics.Configuration.ship.config" />
+          <File Id="AsynService.Logging.Configuration" Name="AsynService.Logging.Configuration.ship.config" Source="$(var.BINARIESDIR)\AsynService.Logging.Configuration.ship.config" />
+          <!--<File Id="Web.config" Name="Web.Async.ship.config" Source="$(var.BINARIESDIR)\Web.Async.ship.config" />-->
+          <RemoveFile Id="Web_Config" Name="Web.Config" On="uninstall" />
+          <RemoveFile Id="Diagnostics_Config" Name="AsynService.Diagnostics.Configuration.config" On="uninstall" />
+          <RemoveFile Id="Logging_Config" Name="AsynService.Logging.Configuration.config" On="uninstall" />
+          <util:XmlFile Id='AsyncService_DBSERVERNAME'
+											  Action='setValue'
+											  ElementPath ='/configuration/POEDSServiceFramework.ConfigurationSource/ServiceHost.Configurations/ConnectionSettings/add[\[]@name="ConfigDB"[\]]'
+											  Name='connectionstring'
+											  File='[INSTALLDIR]Web.Async.ship.config'
+											  Value="Data Source=[CONFIGDBSERVERNAME];Failover Partner=[ALTCONFIGDBSERVERNAME];Initial Catalog=POEDS_Configuration;Integrated Security=True;User Instance=False"/>
+
+          <!--<util:XmlFile Id='AsyncService_PERSISTENCEDBSERVERNAME'
+											  Action='setValue'
+											  ElementPath ='/configuration/system.serviceModel/behaviors/serviceBehaviors/behavior/workflowRuntime/services/add[\[]@type="System.Workflow.Runtime.Hosting.SqlWorkflowPersistenceService, System.Workflow.Runtime, Version=3.0.00000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"[\]]'
+											  Name='connectionString'
+											  File='[INSTALLDIR]Web.Async.ship.config'
+											  Value="Data Source=[PERSISTENCEDBSERVERNAME];Failover Partner=[ALTPERSISTENCEDBSERVERNAME];Initial Catalog=POEDS_WFPersistence;Integrated Security=True;User Instance=False"/>
+
+					<util:XmlFile Id='AsyncService_TRACKINGDBSERVERNAME'
+											  Action='setValue'
+											  ElementPath ='/configuration/system.serviceModel/behaviors/serviceBehaviors/behavior/workflowRuntime/services/add[\[]@type="System.Workflow.Runtime.Tracking.SqlTrackingService, System.Workflow.Runtime, Version=3.0.00000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"[\]]'
+											  Name='connectionString'
+											  File='[INSTALLDIR]Web.Async.ship.config'
+											  Value="Data Source=[TRACKINGDBSERVERNAME];Failover Partner=[ALTTRACKINGDBSERVERNAME];Initial Catalog=POEDS_WFTracking;Integrated Security=True;User Instance=False"/>
+
+          <util:XmlFile Id='AsyncServiceSOWFBehavior_PERSISTENCEDBSERVERNAME'
+											  Action='setValue'
+											  ElementPath ='/configuration/system.serviceModel/behaviors/serviceBehaviors/behavior[\[]@name="AsyncServiceSOWFBehavior"[\]]/workflowRuntime/services/add[\[]@type="System.Workflow.Runtime.Hosting.SqlWorkflowPersistenceService, System.Workflow.Runtime, Version=3.0.00000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"[\]]'
+											  Name='connectionString'
+											  File='[INSTALLDIR]Web.Async.ship.config'
+											  Value="Data Source=[PERSISTENCEDBSERVERNAME];Failover Partner=[ALTPERSISTENCEDBSERVERNAME];Initial Catalog=POEDS_WFPersistence;Integrated Security=True;User Instance=False"/>
+
+          <util:XmlFile Id='AsyncServiceSOWFBehavior_TRACKINGDBSERVERNAME'
+											  Action='setValue'
+											  ElementPath ='/configuration/system.serviceModel/behaviors/serviceBehaviors/behavior[\[]@name="AsyncServiceSOWFBehavior"[\]]/workflowRuntime/services/add[\[]@type="System.Workflow.Runtime.Tracking.SqlTrackingService, System.Workflow.Runtime, Version=3.0.00000.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"[\]]'
+											  Name='connectionString'
+											  File='[INSTALLDIR]Web.Async.ship.config'
+											  Value="Data Source=[TRACKINGDBSERVERNAME];Failover Partner=[ALTTRACKINGDBSERVERNAME];Initial Catalog=POEDS_WFTracking;Integrated Security=True;User Instance=False"/>-->
+
+          <util:XmlFile Id='AsyncService_LoggingFolder'
+											  Action='setValue'
+											  ElementPath ='/system.diagnostics/sharedListeners/add[\[]@name="AsyncTrace"[\]]'
+											  Name='initializeData'
+											  File='[INSTALLDIR]AsynService.Diagnostics.Configuration.ship.config'
+											  Value="[LOGFOLDER]AsyncService_Trace.svclog"/>
+
+          <util:XmlFile Id='AS_Rolling_LoggingFolder'
+											  Action='setValue'
+											  ElementPath ='/configuration/loggingConfiguration/listeners/add[\[]@name="Misc-RollingFlatFileTraceListener"[\]]'
+											  Name='fileName'
+											  File='[INSTALLDIR]AsynService.Logging.Configuration.ship.config'
+											  Value="[LOGFOLDER]POEDSAsyncServiceMiscRolling.log"/>
+
+          <util:XmlFile Id='AS_Trace_LoggingFolder'
+											  Action='setValue'
+											  ElementPath ='/configuration/loggingConfiguration/listeners/add[\[]@name="POEDSService-XMLTraceListener"[\]]'
+											  Name='fileName'
+											  File='[INSTALLDIR]AsynService.Logging.Configuration.ship.config'
+											  Value="[LOGFOLDER]POEDSAsyncServiceData.svclog"/>
+
+          <util:XmlFile Id='AS_PERFTrace_LoggingFolder'
+											  Action='setValue'
+											  ElementPath ='/configuration/loggingConfiguration/listeners/add[\[]@name="PerformanceCounter-XMLTraceListener"[\]]'
+											  Name='fileName'
+											  File='[INSTALLDIR]AsynService.Logging.Configuration.ship.config'
+											  Value="[LOGFOLDER]POEDSAsyncServicePerformanceCounterData.svclog"/>
+
+          <util:XmlFile Id='AS_GeneralTrace_LoggingFolder'
+											  Action='setValue'
+											  ElementPath ='/configuration/loggingConfiguration/listeners/add[\[]@name="General-XMLTraceListener"[\]]'
+											  Name='fileName'
+											  File='[INSTALLDIR]AsynService.Logging.Configuration.ship.config'
+											  Value="[LOGFOLDER]POEDSAsyncServiceGeneral.svclog"/>
+
+          <util:XmlFile Id='AS_ELL_DBSERVER'
+											  Action='setValue'
+											  ElementPath ='/configuration/connectionStrings/add[\[]@name="POEDSLogDB"[\]]'
+											  Name='connectionString'
+											  File='[INSTALLDIR]AsynService.Logging.Configuration.ship.config'
+											  Value="Data Source=[ELLOGDBSERVERNAME];Failover Partner=[ALTELLOGDBSERVERNAME];Initial Catalog=POEDS_ELLogging;Integrated Security=True;User Instance=False"/>
+
+
+          <util:XmlFile Id='AsyncService_RolePingService'
+											  Action='setValue'
+											  ElementPath ='/configuration/POEDSServiceFramework.ConfigurationSource/PingService.Configurations/add[\[]@key="RolePingService"[\]]'
+											  Name='value'
+											  File='[INSTALLDIR]Web.Async.ship.config'
+											  Value="[LOCALGROUPPING]"/>
+
+          <util:XmlFile Id='FileConfigurationSource_Async'
+									Action='setValue'
+									ElementPath ='/configuration/enterpriseLibrary.ConfigurationSource/sources/add[\[]@name="File Configuration Source"[\]]'
+									Name='filePath'
+									File='[INSTALLDIR]Web.Async.ship.config'
+									Value="[INSTALLDIR]AsynService.Logging.Configuration.config"/>
+
+        </Component>
+        <Directory Id="XSLTDIR" Name="XSLTDIR">
+          <Component Id="XSLTFolder" Guid="3A8BE2A0-54F6-4ab2-99B1-731AE9FCD178" NeverOverwrite="yes" >
+            <CreateFolder Directory="XSLTDIR">
+              <Permission User="IIS_IUSRS" GenericExecute="yes" GenericRead="yes"/>
+              <Permission User="Administrators" GenericAll="yes"/>
+              <Permission User="System" GenericAll="yes" />
+            </CreateFolder>
+          </Component>
+          <Component Id="Comp1" Guid="478BED4D-8468-4ff3-AB9C-441101F36AC8" >
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM"]]></Condition>
+            <File Id="PORtoIBB.xslt" Name="PORtoIBB.xslt" Source="$(var.BINARIESDIR)\PORtoIBB.xslt" />
+          </Component>
+          <Component Id="Comp2" Guid="55EF57A5-1971-4969-A3F3-C6531C913E7D" >
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM"]]></Condition>
+            <File Id="RORtoIBB.xslt" Name="RORtoIBB.xslt" Source="$(var.BINARIESDIR)\RORtoIBB.xslt" />
+          </Component>
+        </Directory>
+        <Directory Id="XSDDIR" Name="XSDDIR">
+          <Component Id="XSDFolder" Guid="28E3223F-ABD9-489d-A48D-FD963C915AAC" NeverOverwrite="yes" >
+            <CreateFolder Directory="XSDDIR">
+              <Permission User="IIS_IUSRS" GenericExecute="yes" GenericRead="yes"/>
+              <Permission User="Administrators" GenericAll="yes"/>
+              <Permission User="System" GenericAll="yes" />
+            </CreateFolder>
+          </Component>
+          <Component Id="Comp3" Guid="0E8344E9-0355-4a43-BB32-AFA2C3C53CBD" >
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM"]]></Condition>
+            <File Id="XmlPORSchema.xsd" Name="XmlPORSchema.xsd" Source="$(var.BINARIESDIR)\XmlPORSchema.xsd" />
+          </Component>
+          <Component Id="Comp4" Guid="FACC0329-C477-4568-A7D8-9F65F695DF71" >
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM"]]></Condition>
+            <File Id="XmlRORSchema.xsd" Name="XmlRORSchema.xsd" Source="$(var.BINARIESDIR)\XmlRORSchema.xsd" />
+          </Component>
+          <Component Id="Comp4a" Guid="F4F59687-9760-4ace-A466-5D908F1EC590" >
+            <File Id="SLKCallbackMessage.xsd" Name="SLKCallbackMessage.xsd" Source="$(var.BINARIESDIR)\SLKCallbackMessage.xsd" />
+          </Component>
+        </Directory>
+        <Directory Id="BinDir" Name="bin">
+          <Component Id="Comp5" Guid="1ECF2E8E-1856-423c-B033-8F8389709EED" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Data.dll" Name="Microsoft.Practices.EnterpriseLibrary.Data.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Data.dll" />
+          </Component>
+          <Component Id="Comp6" Guid="6ECF2E8E-2856-423c-B033-8F8389709EED" >
+            <File Id="POEDSAsyncContracts.dll" Name="POEDSAsyncContracts.dll" Source="$(var.BINARIESDIR)\POEDSAsyncContracts.dll" />
+          </Component>
+          <Component Id="Comp7" Guid="4ECF2E8E-4856-423c-B033-8F8389709EED" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Validation.dll" Name="Microsoft.Practices.EnterpriseLibrary.Validation.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Validation.dll" />
+          </Component>
+          <Component Id="Comp8" Guid="5A348116-F3FA-4be7-B7CD-4C5DADAF1D49" >
+            <File Id="POEDSAsyncService.dll" Name="POEDSAsyncService.dll" Source="$(var.BINARIESDIR)\POEDSAsyncService.dll" />
+          </Component>
+          <Component Id="Comp10" Guid="BC244CF3-A984-4ca3-ABE2-1FF1D4E80ED7" >
+            <File Id="POEDSCommonContracts.dll" Name="POEDSCommonContracts.dll" Source="$(var.BINARIESDIR)\POEDSCommonContracts.dll" />
+          </Component>
+          <Component Id="Comp11" Guid="AC73061A-C794-48a0-9DF4-57E036F0A0BB" >
+            <File Id="POEDSCommonFramework.dll" Name="POEDSCommonFramework.dll" Source="$(var.BINARIESDIR)\POEDSCommonFramework.dll" />
+          </Component>
+          <Component Id="Comp12" Guid="AF9FAC1B-121F-4a5d-8ECE-D2BEA8B5B552" >
+            <File Id="POEDSInstrumentation.dll" Name="POEDSInstrumentation.dll" Source="$(var.BINARIESDIR)\POEDSInstrumentation.dll" />
+          </Component>
+          <Component Id="Comp13" Guid="3D7E8FB9-4553-4ddf-B966-317A58B3013D" >
+            <File Id="POEDSFulfillmentContracts.dll" Name="POEDSFulfillmentContracts.dll" Source="$(var.BINARIESDIR)\POEDSFulfillmentContracts.dll" />
+          </Component>
+          <Component Id="Comp15" Guid="D02F6E61-0B37-4582-8F9E-323356CB9A34" >
+            <File Id="POEDSAsyncDataAdapter.dll" Name="POEDSAsyncDataAdapter.dll" Source="$(var.BINARIESDIR)\POEDSAsyncDataAdapter.dll" />
+          </Component>
+          <Component Id="Comp16" Guid="802D7A87-4200-423f-B9FB-753FB410DB85" >
+            <File Id="POEDSMessageLogAdapter.dll" Name="POEDSMessageLogAdapter.dll" Source="$(var.BINARIESDIR)\POEDSMessageLogAdapter.dll" />
+          </Component>
+          <Component Id="Comp17" Guid="1F4240E0-9454-453b-BEF6-0864628D9F2D" >
+            <File Id="POEDSServiceFramework.dll" Name="POEDSServiceFramework.dll" Source="$(var.BINARIESDIR)\POEDSServiceFramework.dll" />
+          </Component>
+          <Component Id="Comp18" Guid="3117B811-CA96-4545-8B41-2A0EC0207595" >
+            <File Id="POEDSDatabaseLogAdapter.dll" Name="POEDSDatabaseLogAdapter.dll" Source="$(var.BINARIESDIR)\POEDSDatabaseLogAdapter.dll" />
+          </Component>
+          <Component Id="Comp19" Guid="65038C5A-B5D8-4b1a-ACAC-7F4E3094368D" >
+            <File Id="POEDSIBBContracts.dll" Name="POEDSIBBContracts.dll" Source="$(var.BINARIESDIR)\POEDSIBBContracts.dll" />
+          </Component>
+          <Component Id="Comp20" Guid="3E4BFC60-9281-4187-95EA-F65C0CA502B3" >
+           <File Id="POEDSTransformationAdapter.dll" Name="POEDSTransformationAdapter.dll" Source="$(var.BINARIESDIR)\POEDSTransformationAdapter.dll" />
+          </Component>
+          <Component Id="Comp21" Guid="EB8423BB-A068-41ff-A107-EB98B8C61B32" >
+           <File Id="POEDSValidationAdapter.dll" Name="POEDSValidationAdapter.dll" Source="$(var.BINARIESDIR)\POEDSValidationAdapter.dll" />
+          </Component>
+          <Component Id="Comp22" Guid="66BFE360-0430-44ec-B69A-200C1CAE7800" >
+            <File Id="POEDSPoeLoadAdapter.dll" Name="POEDSPoeLoadAdapter.dll" Source="$(var.BINARIESDIR)\POEDSPoeLoadAdapter.dll" />
+          </Component>
+          <Component Id="Comp23" Guid="B286FF8A-3BCE-4102-B14B-1CE6FCC1530F" >
+            <File Id="POEDSProcessPendingOrdersAdapter.dll" Name="POEDSProcessPendingOrdersAdapter.dll" Source="$(var.BINARIESDIR)\POEDSProcessPendingOrdersAdapter.dll" />
+          </Component>
+          <Component Id="Comp24" Guid="18E08D2A-5B61-443a-8FFC-C1494D2BF4A0" >
+            <File Id="POEDSRetryFileLoadAdapter.dll" Name="POEDSRetryFileLoadAdapter.dll" Source="$(var.BINARIESDIR)\POEDSRetryFileLoadAdapter.dll" />
+          </Component>
+          <Component Id="Comp25" Guid="A2C3EAFB-727F-405b-9A7C-81C60EF4D873" >
+            <File Id="POEDSSlkCallbackAdapter.dll" Name="POEDSSlkCallbackAdapter.dll" Source="$(var.BINARIESDIR)\POEDSSlkCallbackAdapter.dll" />
+          </Component>
+          <Component Id="Comp26" Guid="ACF2E1A6-0B39-492F-9F78-CE9870C61A12" >
+            <File Id="POEDSSalesOrderAdapter.dll" Name="POEDSSalesOrderAdapter.dll" Source="$(var.BINARIESDIR)\POEDSSalesOrderAdapter.dll" />
+          </Component>
+          <Component Id="Comp27" Guid="AD1F08A4-2C7B-488B-8CAD-ED11FD37FDCE" >
+            <File Id="POEDSProcessRequestAdapter.dll" Name="POEDSProcessRequestAdapter.dll" Source="$(var.BINARIESDIR)\POEDSProcessRequestAdapter.dll" />
+          </Component>
+          <Component Id="Comp28" Guid="F52F30EB-F475-44ee-865F-6F65F6ED9B87" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Common.dll" Name="Microsoft.Practices.EnterpriseLibrary.Common.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Common.dll" />
+          </Component>
+          <Component Id="Comp29" Guid="C92E065C-9AD8-4ae8-9C0A-CC8043E272CB" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Configuration.EnvironmentalOverrides.dll" Name="Microsoft.Practices.EnterpriseLibrary.Configuration.EnvironmentalOverrides.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Configuration.EnvironmentalOverrides.dll" />
+          </Component>
+          <Component Id="Comp30" Guid="20C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Data.SqlCe.dll" Name="Microsoft.Practices.EnterpriseLibrary.Data.SqlCe.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Data.SqlCe.dll" />
+          </Component>
+          <Component Id="Comp31" Guid="21C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll" Name="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.dll" />
+          </Component>
+          <Component Id="Comp32" Guid="22C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll" Name="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.Logging.dll" />
+          </Component>
+          <Component Id="Comp33" Guid="23C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.WCF.dll" Name="Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.WCF.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.ExceptionHandling.WCF.dll" />
+          </Component>
+          <Component Id="Comp34" Guid="24C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Logging.Database.dll" Name="Microsoft.Practices.EnterpriseLibrary.Logging.Database.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Logging.Database.dll" />
+          </Component>
+          <Component Id="Comp35" Guid="25C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Logging.dll" Name="Microsoft.Practices.EnterpriseLibrary.Logging.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Logging.dll" />
+          </Component>
+          <Component Id="Comp36" Guid="26C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WCF.dll" Name="Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WCF.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.EnterpriseLibrary.Validation.Integration.WCF.dll" />
+          </Component>
+          <Component Id="Comp37" Guid="27C39B01-0DB9-496f-AFBC-5B89AF1A8610" >
+            <File Id="Microsoft.Practices.ServiceLocation.dll" Name="Microsoft.Practices.ServiceLocation.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.ServiceLocation.dll" />
+          </Component>
+          <Component Id="Comp38" Guid="27C39B01-0DB9-496f-AFBC-5B89AF1A8620" >
+            <File Id="Microsoft.Practices.Unity.Configuration.dll" Name="Microsoft.Practices.Unity.Configuration.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.Unity.Configuration.dll" />
+          </Component>
+          <Component Id="Comp39" Guid="27C39B01-0DB9-496f-AFBC-5B89AF1A8630" >
+            <File Id="Microsoft.Practices.Unity.dll" Name="Microsoft.Practices.Unity.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.Unity.dll" />
+          </Component>
+          <Component Id="Comp40" Guid="27C39B01-0DB9-496f-AFBC-5B89AF1A8640" >
+            <File Id="Microsoft.Practices.Unity.Interception.Configuration.dll" Name="Microsoft.Practices.Unity.Interception.Configuration.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.Unity.Interception.Configuration.dll" />
+          </Component>
+          <Component Id="Comp41" Guid="27C39B01-0DB9-496f-AFBC-5B89AF1A8650" >
+            <File Id="Microsoft.Practices.Unity.Interception.dll" Name="Microsoft.Practices.Unity.Interception.dll" Source="$(var.BINARIESDIR)\Microsoft.Practices.Unity.Interception.dll" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Component Id='CustomWebSite' Guid='D39309BC-6901-435c-8A50-23EC0A1459B0'>
+        <iis:WebAppPool Id='POEDS' Name='POEDSAPPPool' Identity='networkService' />
+        <iis:WebAppPool Id="POEDSAppPool" Name="[APPPOOL]" Identity="networkService" />
+        <iis:WebSite Id='WEBSITE' Description='[WEBSITE]' Directory='TARGETDIR' AutoStart='yes' DirProperties='AccessAll' ConfigureIfExists='no' >
+          <iis:WebAddress Id="WebSiteAddress" Port="[HTTPPORT]" IP="[IP]" />
+          <iis:WebApplication Id="WebsiteWebApp" Name="PoedsApp" WebAppPool="POEDS" />
+        </iis:WebSite>
+        <iis:WebVirtualDir Id="VirtualDir"
+										   Alias="[VDIR]"
+										   Directory="INSTALLDIR"
+										   DirProperties="AccessAll"
+										   WebSite="WEBSITE" >
+          <iis:WebApplication Id="WebApplication" Name="[VDIR]" WebAppPool="POEDSAppPool"/>
+        </iis:WebVirtualDir>
+      </Component>
+      <Component Id="GrantPermtoNetSer" Guid="76537153-BC0F-46c9-A28B-E4B23D4B1103" Permanent="no">
+        <File Id="GrantPermToNS.exe" Name="GrantPermToNS.exe" Source="$(var.BINARIESDIR)\GrantPermToNS.exe" KeyPath="yes" Checksum="yes"/>
+      </Component>
+      <Component Id="EnableService" Guid="0E4C35F0-7CF0-48b2-9F16-773252D24FC1">
+        <File Id="EnableServiceCMD" Name="EnableService.cmd" Source="$(var.BINARIESDIR)\EnableService.cmd" />
+        <File Id="SetSSL" Name="setSSLAS.cmd" Source="$(var.BINARIESDIR)\setSSLAS.cmd" />
+        <!--<File Id="UpdateUsers" Name="UpdateUsers.exe" Source="..\UpdateUsers.exe" />-->
+        <!--<File Id="MSMQScript" Name="msmqscript.ps1" Source="msmqscript.ps1" />-->
+      </Component>
+      <Component Id="EnableFirewall" Guid="132D46FB-8EAF-4b10-B7EB-740251CEA970" KeyPath="yes">
+        <fire:FirewallException Id="firetcpport" Name="POEDSTCPPort" Port="[TCPPORT]" Protocol="tcp" Scope="any" />
+        <fire:FirewallException Id="firetcpmsmqport" Name="POEDSTCPMSMQPort" Port="1801" Protocol="tcp" Scope="any" />
+      </Component>
+      <Component Id="TargetFolder" Guid="77539C0D-E24B-4a83-9CBA-53F72D18C5B4" >
+        <CreateFolder Directory="TARGETDIR">
+          <Permission User="IIS_IUSRS" GenericRead="yes" GenericExecute="yes" GenericWrite="no" />
+          <Permission User="Administrators" GenericAll="yes"/>
+          <Permission User="System" GenericAll="yes" />
+        </CreateFolder>
+      </Component>
+    </Directory>
+
+    <DirectoryRef Id="INSTALLDIR">
+      <Directory Id="LOGFOLDER" Name="Logs">
+        <Component Id="LogFolderComp" Guid="6088C8B2-1A1E-45d4-97F7-C36EC1E8482B" NeverOverwrite="yes" Permanent="yes">
+          <CreateFolder Directory="LOGFOLDER">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+        </Component>
+      </Directory>
+    </DirectoryRef>
+
+    <DirectoryRef Id="TARGETDIR">
+
+      <Directory Id="WEBLOGS" Name="WEBLOGS">
+        <Component Id="WebLogFolder" Guid="C246A964-00FE-4b1c-8ACC-7914EAF5FC5F" NeverOverwrite="yes" Permanent="yes">
+          <CreateFolder Directory="WEBLOGS">
+            <Permission User="IIS_IUSRS" GenericWrite="yes"/>
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+        </Component>
+      </Directory>
+      <Directory Id="DATADIR" Name="DATADIR">
+        <Directory Id="DaTaPOR" Name="POR" />
+        <Directory Id="DaTaPOR1" Name="OutGoingError">
+          <Directory Id="DaTaPORErr" Name="POR" />
+        </Directory>
+        <Directory Id="DaTaROR" Name="ROR" />
+        <Directory Id="DaTaROR1" Name="OutGoingError">
+          <Directory Id="DaTaRORErr" Name="ROR" />
+        </Directory>
+        <Component Id="DataFolder" Guid="1226D1B0-E1F5-47b1-B5D5-F4C5F459B605" NeverOverwrite="yes" Permanent="yes">
+          <Condition><![CDATA[DEPLOYMENTMODE <> "IM" ]]></Condition>
+          <CreateFolder Directory="DATADIR">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+          <CreateFolder Directory="DaTaPOR">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+          <CreateFolder Directory="DaTaPOR1">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+          <CreateFolder Directory="DaTaPORErr">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+          <CreateFolder Directory="DaTaROR">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+          <CreateFolder Directory="DaTaROR1">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+          <CreateFolder Directory="DaTaRORErr">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes" />
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>
+        </Component>
+      </Directory>
+
+      <Directory Id="ERRORDIR" Name="ERRORDIR">
+        <Directory Id="ErrorPOR" Name="POR">
+          <Component Id="ErrorPOR1" Guid="C4AEDD21-6382-4946-A9B3-4459628D99C9">
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM" ]]></Condition>
+            <CreateFolder Directory="ErrorPOR" />
+          </Component>
+        </Directory>
+        <Directory Id="ErrorROR" Name="ROR">
+          <Component Id="ErrorROR1" Guid="8C372B23-2D06-4DD3-B930-2DF1C8D08A4F">
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM" ]]></Condition>
+            <CreateFolder Directory="ErrorROR" />
+          </Component>
+        </Directory>
+        <Directory Id="ErrorSO" Name="SO">
+          <Component Id="ErrorSO1" Guid="4EBFE602-3C8A-4F8E-A345-44A0EAD30BD6">
+            <Condition><![CDATA[DEPLOYMENTMODE <> "IM" ]]></Condition>
+            <CreateFolder Directory="ErrorSO" />
+          </Component>
+        </Directory>
+        <Component Id="ErrorFolder" Guid="F60833B9-AD20-4248-A863-647E831C4F4C" NeverOverwrite="yes" Permanent="yes">
+          <Condition><![CDATA[DEPLOYMENTMODE <> "IM" ]]></Condition>
+          <CreateFolder Directory="ERRORDIR">
+            <Permission User="IIS_IUSRS" GenericWrite="yes" GenericRead="yes" GenericExecute="yes"/>
+            <Permission User="Administrators" GenericAll="yes"/>
+            <Permission User="System" GenericAll="yes" />
+          </CreateFolder>          
+        </Component>
+      </Directory>
+
+    </DirectoryRef>
+
+    <Feature Id="ProductFeature" Title="POEDSAsyncService" Level="1">
+      <ComponentRef Id="TargetFolder"/>
+      <ComponentRef Id="InstallFolder"/>
+      <!--<ComponentRef Id="UserGroup"/>-->
+      <ComponentRef Id="AsyncServiceEventLog"/>
+      <ComponentRef Id="LogFolderComp"/>
+      <ComponentRef Id="DataFolder"/>
+      <ComponentRef Id="ErrorFolder"/>
+      <ComponentRef Id="XSLTFolder"/>
+      <ComponentRef Id="XSDFolder"/>
+      <ComponentRef Id="RootFiles"/>
+      <ComponentRef Id="Comp1"/>
+      <ComponentRef Id="Comp2"/>
+      <ComponentRef Id="Comp3"/>
+      <ComponentRef Id="Comp4"/>
+      <ComponentRef Id="Comp4a"/>
+      <ComponentRef Id="Comp5"/>
+      <ComponentRef Id="Comp6"/>
+      <ComponentRef Id="Comp7"/>
+      <ComponentRef Id="Comp8"/>
+      <ComponentRef Id="Comp10"/>
+      <ComponentRef Id="Comp11"/>
+      <ComponentRef Id="Comp12"/>
+      <ComponentRef Id="Comp13"/>
+      <ComponentRef Id="Comp15"/>
+      <ComponentRef Id="Comp16"/>
+      <ComponentRef Id="Comp17"/>
+      <ComponentRef Id="Comp18"/>
+      <ComponentRef Id="Comp19"/>
+      <ComponentRef Id="Comp20"/>
+      <ComponentRef Id="Comp21"/>
+      <ComponentRef Id="Comp22"/>
+      <ComponentRef Id="Comp23"/>
+      <ComponentRef Id="Comp24"/>
+      <ComponentRef Id="Comp25"/>
+      <ComponentRef Id="Comp26"/>
+      <ComponentRef Id="Comp27"/>
+      <ComponentRef Id="Comp28"/>
+      <ComponentRef Id="Comp29"/>
+      <ComponentRef Id="Comp30"/>
+      <ComponentRef Id="Comp31"/>
+      <ComponentRef Id="Comp32"/>
+      <ComponentRef Id="Comp33"/>
+      <ComponentRef Id="Comp34"/>
+      <ComponentRef Id="Comp35"/>
+      <ComponentRef Id="Comp36"/>
+      <ComponentRef Id="Comp37"/>
+      <ComponentRef Id="Comp38"/>
+      <ComponentRef Id="Comp39"/>
+      <ComponentRef Id="Comp40"/>
+      <ComponentRef Id="Comp41"/>
+      <ComponentRef Id="EnableService"/>
+      <ComponentRef Id="CustomWebSite"/>
+      <ComponentRef Id="EnableFirewall"/>
+      <ComponentRef Id="WebLogFolder"/>
+      <ComponentRef Id="GrantPermtoNetSer"/>
+      <ComponentRef Id="LegacyMode"/>
+      <ComponentRef Id="FEMode"/>
+      <ComponentRef Id="MTMode"/>
+      <ComponentRef Id="IMMode"/>
+      <ComponentRef Id="LegcayConfig"/>
+      <ComponentRef Id="FEConfig"/>
+      <ComponentRef Id="MTConfig"/>
+      <ComponentRef Id="IMConfig"/>
+      <ComponentRef Id="ErrorPOR1"/>
+      <ComponentRef Id="ErrorROR1"/>
+      <ComponentRef Id="ErrorSO1"/>
+      <ComponentRef Id="BuildInfo"/>
+    </Feature>
+
+    <Binary Id="CustomInstall" SourceFile="$(var.BINARIESDIR)\CustomInstall.exe" />
+
+
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After="InstallFinalize" />
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
+

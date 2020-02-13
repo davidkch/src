@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Factory="MS.IT.POEDS.Host.Service.Async.AsyncServiceFactory" Service="MS.IT.POEDS.Adapter.Service.Async.ProcessRequestService,POEDSProcessRequestAdapter" %>

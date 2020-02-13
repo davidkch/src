@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+<copyright file="XmlPORSchema.xsd" company="Microsoft">
+Copyright (c) Microsoft Corporation.  All rights reserved.
+summary: Schema for the Purchase Order data that Async Service receives
+Author: vaishb
+-->
+<xsd:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://MS.IT.POEDS.Contracts/2009/06" xmlns:poeds="http://MS.IT.POEDS.Contracts/2009/06">
+  <xs:element name="MessageData">
+    <xs:complexType>
+      <xs:all minOccurs="1">
+        <xs:element name="PropertyBagItems" minOccurs="1" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="PropertyBagItem">
+                <xs:complexType>
+                  <xs:attribute name="Key" type="poeds:StringNotEmpty" use="required" />
+                  <xs:attribute name="Value" type="poeds:StringNotEmpty" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="Request">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="PurchaseOrderResponse">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="PropertyBagItems">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element maxOccurs="unbounded" name="PropertyBagItem">
+                            <xs:complexType>
+                              <xs:attribute name="Key" type="poeds:StringNotEmpty" use="required" />
+                              <xs:attribute name="Value" type="xs:string" use="required" />
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Lines">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element maxOccurs="unbounded" name="OrderLine">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element minOccurs="0" name="PropertyBagItems">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element minOccurs="0" maxOccurs="unbounded" name="PropertyBagItem">
+                                        <xs:complexType>
+                                          <xs:attribute name="Key" type="poeds:StringNotEmpty" use="required" />
+                                          <xs:attribute name="Value" type="xs:string" use="required" />
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                                <xs:element minOccurs="0" maxOccurs="unbounded" name="LineItems">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element minOccurs="0" maxOccurs="unbounded" name="OrderLineItem">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element minOccurs="0" name="PropertyBagItems">
+                                              <xs:complexType>
+                                                <xs:sequence>
+                                                  <xs:element minOccurs="0" maxOccurs="unbounded" name="PropertyBagItem">
+                                                    <xs:complexType>
+                                                      <xs:attribute name="Key" type="poeds:StringNotEmpty" use="required" />
+                                                      <xs:attribute name="Value" type="xs:string" use="required" />
+                                                    </xs:complexType>
+                                                  </xs:element>
+                                                </xs:sequence>
+                                              </xs:complexType>
+                                            </xs:element>
+                                            <xs:element minOccurs="0" name="Parts">
+                                              <xs:complexType>
+                                                <xs:sequence>
+                                                  <xs:element minOccurs="0" maxOccurs="unbounded" name="POEBase">
+                                                    <xs:complexType>
+                                                      <xs:sequence>
+                                                        <xs:element minOccurs="0" name="PropertyBagItems">
+                                                          <xs:complexType>
+                                                            <xs:sequence>
+                                                              <xs:element minOccurs="0" maxOccurs="unbounded" name="PropertyBagItem">
+                                                                <xs:complexType>
+                                                                  <xs:attribute name="Key" type="poeds:StringNotEmpty" use="required" />
+                                                                  <xs:attribute name="Value" type="xs:string" use="required" />
+                                                                </xs:complexType>
+                                                              </xs:element>
+                                                            </xs:sequence>
+                                                          </xs:complexType>
+                                                        </xs:element>
+                                                      </xs:sequence>
+                                                      <xs:attribute name="MSPOEId" type="xs:string" use="optional" />
+                                                      <xs:attribute name="POEID" type="xs:long" use="optional" />
+                                                      <xs:attribute name="POEType" type="xs:string" use="optional" />
+                                                      <xs:attribute name="PartNumber" type="xs:string" use="required" />
+                                                      <xs:attribute name="RegionID" type="xs:unsignedByte" use="required" /> <!-- 0 - 255; byte in C# -->
+                                                    </xs:complexType>
+                                                  </xs:element>
+                                                </xs:sequence>
+                                              </xs:complexType>
+                                            </xs:element>
+                                          </xs:sequence>
+                                          <xs:attribute name="OrderLineItemID" type="xs:long" use="required" />
+                                          <xs:attribute name="FulfillmentRegionCode" type="xs:unsignedByte" use="optional" /> <!-- 0 - 255; byte in C# -->
+                                          <xs:attribute name="MSOrderLineItemId" type="xs:string" use="optional" />
+                                          <xs:attribute name="InternalLineNumber" type="xs:int" use="optional" />
+                                          <xs:attribute name="ResponseCode" type="xs:int" use="optional" />
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute name="OrderLineID" type="xs:long" use="optional" />
+                              <xs:attribute name="FulfillmentRegionCode" type="xs:unsignedByte" use="optional" /> <!-- 0 - 255; byte in C# -->
+                              <xs:attribute name="MSOrderLineId" type="xs:string" use="optional" />
+                              <xs:attribute name="PurchaseOrderLineNumber" type="xs:string" use="optional" />
+                              <xs:attribute name="InternalLineNumber" use="required" >
+                                <!--BUG fix 137884. SAP can accepct Min of 1 and Max of 999999-->
+                                <xs:simpleType>
+                                  <xs:restriction base="xs:integer">
+                                    <xs:minInclusive value="1"/>
+                                    <xs:maxInclusive value="999999"/>
+                                  </xs:restriction>
+                                </xs:simpleType>
+                              </xs:attribute>
+                              <xs:attribute name="ProductOfferId" type="poeds:StringNotEmpty" use="required" />
+                              <xs:attribute name="ResponseCode" type="xs:int" use="optional" />
+                              <xs:attribute name="Quantity" type="xs:int" use="required" />
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="PurchaseOrderID" type="xs:string" use="optional" />
+                  <xs:attribute name="FulfillmentRegionCode" type="xs:unsignedByte" use="required" /> <!-- 0 - 255; byte in C# -->
+                  <xs:attribute name="MSPurchaseOrderId" type="poeds:StringNotEmpty" use="required" />
+                  <xs:attribute name="ContextId" type="poeds:StringNotEmpty" use="required" />
+                  <xs:attribute name="ResponseCode" type="xs:int" use="required" />
+                  <xs:attribute name="ExternalOrderNumber" type="poeds:StringNotEmpty" use="required" />
+                  <xs:attribute name="DdspId" type="poeds:StringNotEmpty" use="required" />
+                  <xs:attribute name="ISOCountryCode" type="poeds:StringNotEmpty" use="required" />
+                  <xs:attribute name="RequestorIPAddress" type="xs:string" use="optional" />
+                  <xs:attribute name="RequestorAccountName" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+      <xs:attribute name="ContextId" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="StringNotEmpty">
+    <xs:restriction base="xsd:string">
+      <xs:minLength value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+</xsd:schema>
