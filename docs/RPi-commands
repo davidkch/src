@@ -1,0 +1,57 @@
+change swap file size
+/etc/dphys-swapfile
+
+hdmi sleep
+add line to /boot/config.txt
+hdmi_blanking=1
+
+using Korean
+install font
+sudo apt-get install fonts-lexi-gulim
+
+sudo apt-get install ibus
+sudo apt-get install ibus-hangul
+sudo apt-get install fonts-ufonts-core
+
+sudo apt-get install ibus-pinyin
+
+screen capture
+sudo apt-get install scrot
+
+pdf and ebook reader
+sudo apt-get install okular
+
+remove and clean
+sudo apt-get remove [package name]
+sudo apt-get purge [package name]
+sudo apt-get clean
+
+purge orphaned files
+sudo apt-get autoremove
+sudo apt-get --purge -y autoremove
+
+sudo apt-get update
+sudo apt-get dist-upgrade
+sudo apt-get install -y rpi-chromium-mods
+sudo apt-get install -y python-sense-emu python3-sense-emu
+sudo apt-get install -y python-sense-emu-doc realvnc-vnc-viewer
+
+for those upgrading your current Raspbian system, who don't use xrdp for remote access, but want to enable RealVNC, enter the following command:
+sudo apt-get install -y realvnc-vnc-server
+If you do use xrdp, you can either keep using it or disable it and before enabling RealVNC.
+
+sudo apt install cups cups-ipp-utils system-config-printer printer-driver-cups-pdf
+
+sudo apt-get update
+Once apt is updated, you can upgrade your Raspbian distribution.
+$ sudo apt-get dist-upgrade
+
+kernel version
+uname -a
+
+sudo apt update
+sudo apt install snapd
+sudo reboot
+sudo snap install shellcheck
+
+
