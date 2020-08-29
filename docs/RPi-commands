@@ -54,4 +54,5 @@ sudo apt install snapd
 sudo reboot
 sudo snap install shellcheck
 
+sudo apt-get install parcellite
 
