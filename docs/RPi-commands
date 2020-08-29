@@ -56,3 +56,12 @@ sudo snap install shellcheck
 
 sudo apt-get install parcellite
 
+extracting .tar.gz files
+tar xvzf file.tar.gz
+
+Debian 10:
+Host name: debian
+domanin name: Tiger_Net
+Root: DebianRoot#
+david: horangyeeDebian#10
+
