@@ -65,3 +65,13 @@ domanin name: Tiger_Net
 Root: DebianRoot#
 david: horangyeeDebian#10
 
+
+sudo apt-get –purge remove APPNAME
+sudo apt-get autoremove –purge
+
+dpkg --get-selections > dpkg-selections.txt
+dpkg --get-selections | less
+
+
+
+
