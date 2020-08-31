@@ -72,6 +72,11 @@ sudo apt-get autoremove –purge
 dpkg --get-selections > dpkg-selections.txt
 dpkg --get-selections | less
 
+sudo chmod -R ugo+rw /folder/where/your/file/is/
 
+Examples:
+  chown root /u        Change the owner of /u to "root".
+  chown root:staff /u  Likewise, but also change its group to "staff".
+  chown -hR root /u    Change the owner of /u and subfiles to "root".
 
 
