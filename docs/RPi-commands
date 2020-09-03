@@ -79,4 +79,26 @@ Examples:
   chown root:staff /u  Likewise, but also change its group to "staff".
   chown -hR root /u    Change the owner of /u and subfiles to "root".
 
+su - username
+usermod -aG sudo username
+
+
+installing chrome
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install ./google-chrome-stable_current_amd64.deb
+
+
+
+
+
+add below lines to /etc/apt/sources.list.d
+
+deb http://deb.debian.org/debian buster main contrib non-free
+deb-src http://deb.debian.org/debian buster main contrib non-free
+
+deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+
+deb http://deb.debian.org/debian buster-updates main contrib non-free
+deb-src http://deb.debian.org/debian buster-updates main contrib non-free
 
