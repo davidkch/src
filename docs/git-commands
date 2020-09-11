@@ -1,0 +1,13 @@
+git remote show origin
+
+
+*how to update a forked repo with git rebase
+git remote add upstream https://github.com/raspberrypi/firmware.git
+xgit pull upstream master
+
+git fetch upstream
+git rebase upstream/master
+
+git pull upstream master
+
+git push origin master  --force
