@@ -1,2 +1,5 @@
 _pycache_/
 
+/java/HelloWorld/HelloWorld/target/
+/java/HelloWorld/nbproject/private/
+/java/HelloWorld/build/
